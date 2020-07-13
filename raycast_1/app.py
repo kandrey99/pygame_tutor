@@ -1,5 +1,4 @@
 import pygame as pg
-from pygame.math import Vector2
 from constants import *
 from player import Player
 from game_map import GameMap
@@ -8,13 +7,13 @@ import math
 
 class App:
     def __init__(self):
-        self._size = self._width, self._height = 800, 600
+        self._size = self._width, self._height = 1200, 800
         self._screen = pg.display.set_mode(self._size)
         self._rect = self._screen.get_rect()
         self._clock = pg.time.Clock()
         self._keys = pg.key.get_pressed()
         self._player = Player(self._rect.center)
-        self._map = GameMap(8)
+        self._map = GameMap((12, 8))
 
     def _event_loop(self):
         for event in pg.event.get():
@@ -28,20 +27,27 @@ class App:
 
     def _render(self):
         self._screen.fill(BLACK)
-        self._screen.blit(self._player.image, self._player.rect)
+        for x, y in self._map._grid:
+            pg.draw.rect(self._screen, (64,32,32), (x, y, 100, 100), 1)
         fov = math.pi / 3
-        fov_delta = fov / 120
+        ray_count = 24
+        scale = self._width / ray_count
+        dfov = fov / ray_count
+        x0, y0 = self._player.position[0], self._player.position[1]
         angle = self._player.direction - fov / 2
-        for i in range(121):
-            angle += fov_delta
-            v = Vector2(math.cos(angle), math.sin(angle))
-            for depth in range(300):
-                pg.draw.line(self._screen, GRAY, self._player.position,
-                             self._player.position + depth * v)
-        for (x, y), v in self._map._grid.items():
-            if v:
-                pg.draw.rect(self._screen, GRAY, (x * 64, y * 64, 64, 64), 1)
-
+        dist = ray_count / (2 * math.tan(fov / 2))
+        proj_k = dist * 1500
+        for ray in range(ray_count + 1):
+            cos_a, sin_a = math.cos(angle), math.sin(angle)
+            for depth in range(1, 1200, 1):
+                x, y = x0 + depth * cos_a, y0 + depth * sin_a
+                if (x // 100 * 100, y // 100 * 100) in self._map._grid:
+                    h = proj_k / depth
+                    pg.draw.rect(self._screen, WHITE, (ray * scale, self._height / 2 - h // 2, scale * 1, h * 1), 1)
+                    pg.draw.line(self._screen, (32, 32, 32), self._player.position, (x0 + depth * cos_a, y0 + depth * sin_a))
+                    break
+            angle += dfov
+        self._screen.blit(self._player.image, self._player.rect)
         pg.display.flip()
 
     def run(self):
