@@ -1,11 +1,12 @@
 import random
 import itertools
+from constants import *
 
 
 class GameMap:
     def __init__(self, size):
         self._size = size
-        self._grid = self._create_map()
+        self.grid = self._create_map()
 
     def _create_random_map(self):
         coordinates = itertools.product(range(self._size[0]), range(self._size[1]))
@@ -18,9 +19,9 @@ class GameMap:
                 'W.....W....W',
                 'W..........W',
                 'W..........W',
-                'W..........W',
+                'W.WW.......W',
                 'W..........W',
                 'WWWWWWWWWWWW', ]
-        grid = [(column * 100, row * 100) for row in range(8) for column in range(12) if plan[row][column] == 'W']
+        grid = [(column * TILE, row * TILE) for row in range(8) for column in range(12) if plan[row][column] == 'W']
         print(grid)
         return grid

@@ -1,46 +1,36 @@
 import pygame as pg
-from pygame.sprite import Sprite
 from constants import *
 import math
 
 CIRCLE = 2 * math.pi
 
 
-class Player(Sprite):
-    def __init__(self, pos):
-        super().__init__()
-        self._position = pos
-        self.image = pg.Surface((32, 32)).convert()
-        self.image.set_colorkey(BLACK)
-        self.rect = self.image.get_rect(center=pos)
-        self._direction = 0
-        self._dir_info = math.cos(self._direction), math.sin(self._direction)
+class Player:
+    def __init__(self, pos, direction=0):
+        self._x, self._y = pos
+        self._direction = direction
         self._rotate_speed = math.pi / 2
-        self._speed = 64
-        self._draw()
+        self._speed = 100
 
     @property
     def position(self):
-        return self._position
+        return self._x, self._y
 
     @property
     def direction(self):
         return self._direction
 
-    def _draw(self):
-        self.image.fill(BLACK)
-        rect = self.image.get_rect()
-        pg.draw.circle(self.image, GREEN, rect.center, 16, 1)
-        pg.draw.line(self.image, GREEN, rect.center, ((self._dir_info[0] + 1) * 16, (self._dir_info[1] + 1) * 16))
+    def draw(self, sc):
+        cos, sin = math.cos(self._direction), math.sin(self._direction)
+        pg.draw.circle(sc, GREEN, (int(self._x), int(self._y)), 16, 1)
+        pg.draw.line(sc, GREEN, (self._x, self._y), (self._x + 100 * cos, self._y + 100 * sin))
 
     def rotate(self, angle):
         self._direction = (self._direction + angle) % CIRCLE
-        self._dir_info = math.cos(self._direction), math.sin(self._direction)
 
     def walk(self, distance):
-        self._position = (self._position[0] + distance * self._dir_info[0],
-                          self._position[1] + distance * self._dir_info[1])
-        self.rect.center = self._position
+        cos, sin = math.cos(self._direction), math.sin(self._direction)
+        self._x, self._y = self._x + distance * cos, self._y + distance * sin
 
     def update(self, keys, dt):
         if keys[pg.K_LEFT]:
@@ -51,4 +41,3 @@ class Player(Sprite):
             self.walk(self._speed * dt)
         if keys[pg.K_DOWN]:
             self.walk(-self._speed * dt)
-        self._draw()
